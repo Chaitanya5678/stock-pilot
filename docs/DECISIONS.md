@@ -438,3 +438,87 @@ Master data and product catalog share one permission, so they will always have t
 authorized roles unless a future decision explicitly splits them. If master-data management ever
 needs a different role boundary than product catalog management, that's a new decision (a new
 permission), not a change to this one.
+
+---
+
+# Decision: No audit-actor column added to ShiftInchargeEntry
+
+Status: APPROVED
+
+## Decision
+`ShiftInchargeEntry` gained no new column in this phase. In particular, no `recordedByUserId` (or
+similar) foreign key to `User` was added, even though `recordShiftEntry` runs under an
+authenticated session and every other mutating table in the system (`StockMovement`,
+`InventoryItem` implicitly via its movements) captures the authenticated actor.
+
+## Rationale
+Directly instructed: "Do not introduce a User foreign key into the shift model merely because
+authentication exists." The Shift In-Charge ↔ User relationship is explicitly OPEN_QUESTION and
+DEFERRED (see "Authenticated user is the authoritative audit identity" above) and must not be
+redesigned around. Authorization for *who may call* `recordShiftEntry` is still fully enforced
+server-side via the session's role (`requirePermission`) — only the *persisted row* omits an
+actor reference, preserving the existing model exactly as documented in `docs/DOMAIN.md` §7.
+
+## Consequences
+There is currently no way to answer "which authenticated user recorded this
+`ShiftInchargeEntry`?" — only "who does the entry say was in charge" (`inchargeId`, free text) is
+stored, exactly as the reference had it. This is a real, intentional gap, not an oversight;
+closing it (adding an actor column) is exactly the kind of change the deferred OPEN_QUESTION
+governs and must not be done silently in a future phase either.
+
+---
+
+# Decision: Shift in-charge read/derive functions reuse the existing `deriveInchargeAt` domain function
+
+Status: APPROVED
+
+## Decision
+`getCurrentShiftIncharge` (`src/application/shift/getCurrentShiftIncharge.ts`) fetches all
+`ShiftInchargeEntry` rows (ascending `createdAt`, per that function's documented tie-break
+contract) and calls the existing, already-tested `deriveInchargeAt` — it does not reimplement the
+rule. This is a distinct code path from `recordStockMovement`'s own `findFirst`-with-`orderBy`
+query, which computes the same rule via SQL for its own snapshot purposes and was left
+untouched (out of scope — "do not refactor unrelated code").
+
+## Rationale
+Directly instructed: "Reuse the existing domain function(s)... rather than duplicating that logic
+in the UI," and "The UI must not independently calculate the current shift in-charge... must be
+based on the existing documented derivation rule." Calling the named, tested function is the most
+literal, unambiguous way to satisfy that.
+
+## Consequences
+Both code paths (`recordStockMovement`'s inline query and `getCurrentShiftIncharge`'s use of
+`deriveInchargeAt`) must agree, since both implement the same documented rule
+(docs/BUSINESS_RULES.md §8) — `recordStockMovement`'s tests and `deriveInchargeAt`'s tests
+together cover it. Unifying them into one code path was not done here (would touch
+`recordStockMovement`, out of scope for this phase) but would be a reasonable small follow-up.
+
+---
+
+# Decision: Shift in-charge recording reuses `catalog:manage`; viewing reuses `catalog:view`
+
+Status: APPROVED, with an OPEN_QUESTION about the recording boundary
+
+## Decision
+`recordShiftEntry` requires `catalog:manage` (ADMIN, STORE_MANAGER only). `listShiftEntries` and
+`getCurrentShiftIncharge` require `catalog:view` (all four roles) — the current in-charge and
+recent history are visible to everyone who can see the Inventory page, matching how the reference
+displayed this card to anyone regardless of role (the reference had no roles at all).
+
+## Rationale
+No existing permission maps directly to "shift log administration." Per instruction: "Do not
+create a new permission type unless the existing architecture genuinely requires it... If the
+existing permissions are suitable, reuse them." `catalog:manage` is the closest existing
+"trusted-operational-management" permission and was reused rather than inventing
+`shift:record`. Viewing is low-risk informational context (who's currently responsible), so it
+was left at the broadest existing read permission (`catalog:view`), matching the reference's
+fully-open visibility.
+
+## OPEN_QUESTION
+The reference let *anyone* record a shift in-charge entry (no roles existed at all), which is
+strictly more permissive than restricting it to ADMIN/STORE_MANAGER. Should STORE_OPERATOR — who
+is plausibly the person physically staffing a shift — also be able to record themselves (or
+someone else) as shift in-charge? This is a genuine, unresolved product question, not decided
+here; `catalog:manage`-only was chosen as the minimum-safe default (reuse an existing permission,
+default to the more restrictive option) rather than guessed at. Changing it is a one-line change
+to `recordShiftEntry`'s `requirePermission` call plus a test update.

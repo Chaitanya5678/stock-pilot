@@ -628,3 +628,42 @@ td:last-child {
   font-weight: 800;
   white-space: nowrap;
 }
+
+/* Shift in-charge log */
+
+.shift-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.primary-btn.full {
+  width: 100%;
+}
+
+.shift-list {
+  display: grid;
+  gap: 0;
+}
+
+.shift-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.78rem;
+}
+
+.shift-row:first-child {
+  border-top: 0;
+}
+
+.shift-row strong {
+  color: var(--ink);
+}
+
+.shift-row span {
+  color: var(--dim);
+  white-space: nowrap;
+}

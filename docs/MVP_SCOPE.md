@@ -32,9 +32,12 @@ speculative — each line is either a reference workflow or a CLAUDE.md-mandated
   the product form (same live read query, no caching).
 - Role-appropriate UI (catalog and master-data management controls hidden for roles without
   `catalog:manage`, enforced server-side regardless of what the UI shows).
+- Shift in-charge log (record + derive "current") — a sidebar card on the Inventory page, per
+  `docs/UI_REFERENCE.md` §2. Recording requires `catalog:manage`; viewing the current in-charge
+  and recent history is visible to all roles. See `docs/DECISIONS.md` for the three decisions
+  from this phase (no audit-actor column, reuse of `deriveInchargeAt`, permission reuse).
 
 **Application features — not yet built (next phases):**
-- Shift in-charge log (record + derive "current").
 - Low-stock alerts sidebar (movement history is built; the low-stock alert panel is not).
 - Product delete/deactivate — see `docs/DECISIONS.md` "Product delete/deactivate" OPEN_QUESTION.
 
@@ -90,6 +93,12 @@ audit identity, and STORE_OPERATOR's adjustment permission (now firmly **no** �
 7. **Threshold validation mismatch** (`BUSINESS_RULES.md` §11) — resolved for the foundation:
    `threshold >= 0` is enforced (the reference's actually-executed JS rule), not the HTML's
    unenforced `min=1`. Revisit if the business wants a stricter floor.
+8. **Shift-entry timestamp tie-break** (`DOMAIN.md` §7) — undefined in the reference, given a
+   deterministic-but-arbitrary resolution in `deriveInchargeAt` (later array entry wins); not
+   revisited this phase.
+9. **Who may record a shift in-charge entry** (`docs/DECISIONS.md` "Shift in-charge recording
+   reuses catalog:manage") — restricted to ADMIN/STORE_MANAGER as the minimum-safe default,
+   though the reference let anyone do it. Open whether STORE_OPERATOR should also be allowed.
 8. **Product delete/deactivate** (`docs/DECISIONS.md` "Product delete/deactivate") — not built;
    the reference never supported it either, but production needs *some* answer eventually.
 9. **Item department vs. its linked machine's department may diverge** (`DOMAIN.md` §5) — the
@@ -120,11 +129,11 @@ typecheck/lint/tests pass.
 
 ## 8. Foundation status
 
-Built and verified, across four completed phases (foundation → stock movement vertical slice →
-product catalog management → master data management): database schema + migrations, domain
-layer, `recordStockMovement`, `createInventoryItem`/`updateInventoryItem`, department/machine/
-machine-unit create+edit(+delete for department) use cases, auth (login/logout/me), RBAC
-enforcement, full login → inventory → movement/catalog/machines UI, test suite (unit +
-integration + Playwright E2E), dev seed data. Not built: shift-in-charge log UI, low-stock alerts
-panel, analytics, product delete/deactivate. See each phase's completion report for full
-verification detail.
+Built and verified, across five completed phases (foundation → stock movement vertical slice →
+product catalog management → master data management → shift in-charge log): database schema +
+migrations, domain layer, `recordStockMovement`, `createInventoryItem`/`updateInventoryItem`,
+department/machine/machine-unit create+edit(+delete for department), `recordShiftEntry`/
+`listShiftEntries`/`getCurrentShiftIncharge` use cases, auth (login/logout/me), RBAC enforcement,
+full login → inventory → movement/catalog/machines/shift UI, test suite (unit + integration +
+Playwright E2E), dev seed data. Not built: low-stock alerts panel, analytics, product
+delete/deactivate. See each phase's completion report for full verification detail.
