@@ -120,6 +120,14 @@ machines reference it (matched by name). Otherwise blocked with a toast reportin
 No equivalent guard exists for machines or machine units because they cannot be deleted at all
 in the reference.
 
+**Implemented**: `deleteDepartment` counts dependent `machines`/`items` (matched by FK now, not
+name) inside the same transaction as the delete, and produces the same "Cannot remove X: in use
+(N items, M machines)" message. The schema's `onDelete: Restrict` on every FK into `departments`
+is a second, database-level backstop against the same race the reference never had to worry
+about (single-threaded browser state) — see `docs/DECISIONS.md` "Master data deletion scope."
+No cascade of any kind: machines, machine units, inventory items, and stock movements are never
+deleted or modified by a department deletion (attempt).
+
 ## 8. Shift in-charge derivation
 
 ```

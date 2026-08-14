@@ -357,3 +357,84 @@ way to create it (department/machine CRUD remains explicitly out of scope, per
 `docs/MVP_SCOPE.md`). The dev seed data provides enough departments/machines to exercise the
 catalog feature; a future phase adding department/machine management would reuse this same read
 query for the product form.
+
+**Superseded**: department/machine/machine-unit management was built in the next phase — see
+"Master data edit beyond reference" and "Master data deletion scope" below.
+
+---
+
+# Decision: Master data edit beyond reference (Department, Machine, MachineUnit)
+
+Status: APPROVED
+
+## Decision
+Department, Machine, and MachineUnit all support create *and* edit. `code` (Department/Machine)
+is never regenerated on edit — the same fixed-after-creation pattern already used for product
+SKU/barcode.
+
+## Rationale
+The reference prototype only supported add for Machine/MachineUnit (no edit at all) and
+add-plus-delete for Department (also no edit) — see `docs/UI_REFERENCE.md` §4. The user
+explicitly instructed edit for all three in the Master Data Management phase ("DEPARTMENT: ...
+edit", "MACHINE: ... edit", "MACHINE UNIT: ... edit"), so this is a direct instruction, not an
+invented rule. Per docs/CLAUDE.md's own precedent (Product Edit), production requirements
+override conflicting-or-absent prototype behaviour when explicitly given.
+
+## Consequences
+Editing a Machine's department or a MachineUnit's machine is allowed (re-parenting), matching how
+Product Edit already allows changing an item's department/machine — no reference behaviour to
+contradict here since the reference never had edit to compare against. Renaming/editing never
+touches `code`, `sku`, or `stock` on any entity — consistent with the whole codebase's "master
+data mutation never mutates a generated identifier or a stock-adjacent field" pattern.
+
+---
+
+# Decision: Master data deletion scope (this phase)
+
+Status: APPROVED
+
+## Decision
+Only `Department` supports delete, exactly reproducing the reference's guard (blocked if any
+machine or inventory item references it — docs/BUSINESS_RULES.md §7). `Machine` and
+`MachineUnit` have no delete operation at all.
+
+## Rationale
+Directly instructed: "Do not automatically add delete/deactivate for Machine or Machine Unit
+unless the existing reference/documentation explicitly requires it" — the reference never
+supported deleting either, and no documentation established a rule for it. Department delete *is*
+explicitly documented (`docs/MVP_SCOPE.md`: "department delete-if-unused";
+`docs/BUSINESS_RULES.md` §7), so implementing it is following an existing rule, not inventing one.
+
+## Consequences
+No cascading delete exists anywhere in this phase. Every FK into `departments`, `machines`, and
+`machine_units` is `onDelete: Restrict` in the schema (already true before this phase), so even a
+hypothetical future Machine/MachineUnit delete endpoint would need the same explicit
+count-then-block pattern used for Department — it could not simply cascade without a further,
+separate decision.
+
+---
+
+# Decision: Master data mutations reuse the existing `catalog:manage` permission
+
+Status: APPROVED
+
+## Decision
+No new permissions were added. Every Department/Machine/MachineUnit mutation (`createDepartment`,
+`updateDepartment`, `deleteDepartment`, `createMachine`, `updateMachine`, `createMachineUnit`,
+`updateMachineUnit`) calls the same `requirePermission(role, "catalog:manage")` already used for
+product create/edit. Reads use the existing `catalog:view` permission, already granted to all
+four roles.
+
+## Rationale
+`catalog:manage` is already scoped to exactly `ADMIN` and `STORE_MANAGER` (see "RBAC permission
+model"), which is precisely the master-data management boundary this phase asked for. The user
+explicitly instructed reusing a suitable existing permission over creating granular ones
+(`department:create`, `machine:edit`, etc.) "unless the existing architecture genuinely requires
+that granularity" — it doesn't; master data and product catalog management have identical
+authorized roles.
+
+## Consequences
+Master data and product catalog share one permission, so they will always have the same
+authorized roles unless a future decision explicitly splits them. If master-data management ever
+needs a different role boundary than product catalog management, that's a new decision (a new
+permission), not a change to this one.

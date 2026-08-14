@@ -26,14 +26,14 @@ speculative — each line is either a reference workflow or a CLAUDE.md-mandated
   server-side validated, atomic, with movement/history visibility.
 - Browse/search/filter the product catalog (search, department, category, status).
 - Add/edit the product catalog (edit excludes stock — see `docs/DECISIONS.md`).
-- Role-appropriate UI (catalog management controls hidden for roles without `catalog:manage`,
-  enforced server-side regardless of what the UI shows).
+- Maintain departments (add, edit, delete-if-unused), machine models (add, edit), machine units
+  (add, edit) — see `docs/DECISIONS.md` "Master data edit beyond reference" and "Master data
+  deletion scope." Newly created/edited departments and machines are immediately selectable in
+  the product form (same live read query, no caching).
+- Role-appropriate UI (catalog and master-data management controls hidden for roles without
+  `catalog:manage`, enforced server-side regardless of what the UI shows).
 
 **Application features — not yet built (next phases):**
-- Maintain departments, machine models, machine units (add; department delete-if-unused) — the
-  product form can *select* existing departments/machines (a read-only lookup, see
-  `docs/DECISIONS.md` "Product Catalog: read access to departments/machines"), but cannot create
-  them.
 - Shift in-charge log (record + derive "current").
 - Low-stock alerts sidebar (movement history is built; the low-stock alert panel is not).
 - Product delete/deactivate — see `docs/DECISIONS.md` "Product delete/deactivate" OPEN_QUESTION.
@@ -120,10 +120,11 @@ typecheck/lint/tests pass.
 
 ## 8. Foundation status
 
-Built and verified, across three completed phases (foundation → stock movement vertical slice →
-product catalog management): database schema + migrations, domain layer, `recordStockMovement`,
-`createInventoryItem`, `updateInventoryItem` use cases, auth (login/logout/me), RBAC enforcement,
-full login → inventory → movement/catalog UI, test suite (unit + integration + Playwright E2E),
-dev seed data. Not built: add department/machine/machine-unit, shift-in-charge log UI, low-stock
-alerts panel, analytics, product delete/deactivate. See each phase's completion report for full
+Built and verified, across four completed phases (foundation → stock movement vertical slice →
+product catalog management → master data management): database schema + migrations, domain
+layer, `recordStockMovement`, `createInventoryItem`/`updateInventoryItem`, department/machine/
+machine-unit create+edit(+delete for department) use cases, auth (login/logout/me), RBAC
+enforcement, full login → inventory → movement/catalog/machines UI, test suite (unit +
+integration + Playwright E2E), dev seed data. Not built: shift-in-charge log UI, low-stock alerts
+panel, analytics, product delete/deactivate. See each phase's completion report for full
 verification detail.

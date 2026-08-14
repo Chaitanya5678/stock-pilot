@@ -19,6 +19,13 @@ are called out separately (`PRODUCTION_REQUIREMENT`).
 `PRODUCTION_REQUIREMENT`: `Date.now()`-derived IDs are collision-prone under any concurrent/
 multi-user access and must become DB-generated keys (serial or UUID) in production.
 
+**Implemented, with edit added beyond the reference for Department/Machine/MachineUnit**: the
+Master Data Management phase explicitly instructed edit for all three (`docs/DECISIONS.md`
+"Master data edit beyond reference"), even though the reference was add-only for Machine/
+MachineUnit and add-plus-delete-only for Department. Department deletion is implemented exactly
+as the reference guarded it (§7 below); Machine and MachineUnit still have no delete, matching
+the reference and per explicit instruction not to invent one.
+
 ## 2. Department
 
 | Field | Type | Notes |
@@ -31,6 +38,11 @@ Seed data: Maintenance/MNT, Production/PRD, Utilities/UTL, Safety/SAF, Stores/ST
 
 Delete rule: blocked if any `InventoryItem.department === department.name` or
 `Machine.department === department.name`.
+
+**Implemented**: delete is blocked via a live count of dependent `machines`/`items` rows (FK by
+id, not name-matching) — see `docs/BUSINESS_RULES.md` §7. Edit (rename) is implemented; `code` is
+never regenerated on rename, matching the fixed-code-after-creation pattern already established
+for product SKU/barcode (`docs/DECISIONS.md` "Product Edit does not change stock").
 
 ## 3. Machine (equipment model)
 
@@ -53,7 +65,12 @@ observed behaviour.
 Restrict`) in `prisma/schema.prisma`.
 
 `OPEN_QUESTION`: Is machine-model name required to be unique (per department or globally)? The
-reference does not enforce this — only the derived `code` is deduplicated.
+reference does not enforce this — only the derived `code` is deduplicated. **Still open** — the
+Master Data Management phase preserved this (no uniqueness check on machine name), consistent
+with the reference.
+
+**Implemented**: create and edit (name, department, cost, vendor, warranty). No delete — never
+required by the reference or `docs/MVP_SCOPE.md`.
 
 ## 4. MachineUnit (physical equipment unit)
 
@@ -62,6 +79,9 @@ reference does not enforce this — only the derived `code` is deduplicated.
 | id | string | `UNIT-###` |
 | modelId | string | FK → `Machine.id`, required |
 | name | string, ≤50 chars | required, no uniqueness check |
+
+**Implemented**: create and edit (machine, name). No delete — never required by the reference or
+`docs/MVP_SCOPE.md`.
 
 ## 5. InventoryItem (Product)
 

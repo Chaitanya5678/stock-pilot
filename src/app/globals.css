@@ -73,6 +73,46 @@ button {
   gap: 14px;
 }
 
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: auto;
+  margin-left: 22px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.nav-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nav-btn:hover {
+  color: var(--ink);
+}
+
+.nav-btn.active {
+  background: rgba(143, 124, 255, 0.25);
+  color: #fff;
+}
+
+@media (max-width: 620px) {
+  .app-nav {
+    order: 3;
+    width: 100%;
+    margin: 12px 0 0;
+  }
+}
+
 .user-chip {
   color: var(--muted);
   font-size: 0.85rem;
@@ -522,4 +562,69 @@ td:last-child {
   .form-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Machines page: master-data panels */
+
+.machines-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.85fr);
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 960px) {
+  .machines-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.master-panel {
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.master-list {
+  display: grid;
+  gap: 0;
+  max-height: 420px;
+  overflow-y: auto;
+  border-top: 1px solid var(--line);
+}
+
+.master-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.master-row:first-child {
+  border-top: 0;
+}
+
+.master-row strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.86rem;
+}
+
+.master-row p {
+  margin: 3px 0 0;
+  color: var(--dim);
+  font-size: 0.72rem;
+}
+
+.code-badge {
+  padding: 3px 7px;
+  border-radius: 7px;
+  background: rgba(143, 124, 255, 0.15);
+  color: #beb5ff;
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
