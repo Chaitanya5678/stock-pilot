@@ -1,16 +1,19 @@
 import { requireSession } from "@/infrastructure/auth/requireSession";
 import { listInventoryItems } from "@/application/inventory/listInventoryItems";
 import { listRecentMovements } from "@/application/inventory/listRecentMovements";
+import { listCatalogOptions } from "@/application/catalog/listCatalogOptions";
 import { allowedMovementDirections } from "@/domain/stock/movementPermissions";
+import { hasPermission } from "@/domain/rbac/permissions";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { InventoryWorkspace } from "@/components/inventory/InventoryWorkspace";
 
 export default async function InventoryPage() {
   const session = await requireSession();
 
-  const [items, movements] = await Promise.all([
+  const [items, movements, catalogOptions] = await Promise.all([
     listInventoryItems(session.role),
     listRecentMovements(session.role),
+    listCatalogOptions(session.role),
   ]);
 
   return (
@@ -26,6 +29,9 @@ export default async function InventoryPage() {
         items={items}
         movements={movements}
         allowedDirections={allowedMovementDirections(session.role)}
+        canManageCatalog={hasPermission(session.role, "catalog:manage")}
+        departments={catalogOptions.departments}
+        machines={catalogOptions.machines}
       />
     </main>
   );

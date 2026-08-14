@@ -298,3 +298,62 @@ stock-transaction foundation, so deferring them costs nothing at this stage.
 Analytics and any activity/quick-adjust UI remain entirely unbuilt; nothing in the current schema
 or domain layer forecloses building them later. Recorded again in docs/MVP_SCOPE.md under
 DEFERRED.
+
+---
+
+# Decision: Product delete/deactivate — deferred, OPEN_QUESTION
+
+Status: PENDING (not approved as a permanent behaviour; safest reversible choice made for now)
+
+## Decision
+Product Catalog Management (this phase) implements create and edit only. There is no delete,
+soft-delete, or deactivate action anywhere in the UI or application layer for `InventoryItem`,
+and no `isActive`/`deletedAt`-style column was added to the schema.
+
+## Rationale
+The reference prototype itself never supported deleting a product (docs/DOMAIN.md §1: "Deletable
+in UI: No"), so there is no reference behaviour to preserve or deviate from. `docs/MVP_SCOPE.md`
+never listed product delete as MUST HAVE. Per the user's own instruction for this phase: "If safe
+deletion/deactivation behaviour is genuinely unresolved, do NOT invent a permanent destructive
+behaviour... document as OPEN_QUESTION." A destructive delete is also in direct tension with the
+audit trail requirement (CLAUDE.md §4, docs/DECISIONS.md "Audit identity") — every
+`StockMovement.itemId` is a required, `onDelete: Restrict` foreign key, so physically deleting an
+item with any movement history would be rejected by the database anyway, and even a store-only
+item with zero history shouldn't be silently unrecoverable without a considered design (does it
+need to reappear in historical reports? should its code be reusable?).
+
+## Consequences
+`OPEN_QUESTION`: what should "removing" a product mean in this system — hard delete only for
+items with zero movement history, a soft-deactivate flag that hides it from the active catalog
+but preserves it for historical movement display, or something else? Not decided. No schema
+change was made preemptively; when this is resolved, it most likely needs a migration (e.g. an
+`isActive` boolean) rather than a code-only change, so it's flagged here rather than guessed at.
+
+---
+
+# Decision: Product Catalog form reads (not manages) departments/machines
+
+Status: APPROVED
+
+## Decision
+`listCatalogOptions` (`src/application/catalog/listCatalogOptions.ts`) reads existing
+departments and machines — id, name, code, and each machine's department — solely to populate
+the Add/Edit Product form's selects and to preserve the reference's "picking a machine auto-fills
+department" convenience (docs/DOMAIN.md §5 OPEN_QUESTION — the auto-fill is preserved, the
+divergence-afterward question remains open). This is a read-only query gated by `catalog:view`;
+no create/update/delete operation for `Department` or `Machine` was added.
+
+## Rationale
+The Product Catalog feature is unbuildable without a way to choose a product's department and
+machine, and both are required/optional foreign keys respectively on `InventoryItem`. This is the
+"unavoidable" carve-out the user's own scope instructions anticipated ("do NOT implement
+department CRUD, machine CRUD... unless an existing documented requirement makes one of these
+unavoidable for the Product Catalog feature") — reading is unavoidable; managing them is not, and
+was not built.
+
+## Consequences
+If a department or machine needed by a product doesn't exist yet, there is currently no in-app
+way to create it (department/machine CRUD remains explicitly out of scope, per
+`docs/MVP_SCOPE.md`). The dev seed data provides enough departments/machines to exercise the
+catalog feature; a future phase adding department/machine management would reuse this same read
+query for the product form.

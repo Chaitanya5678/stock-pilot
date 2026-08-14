@@ -6,12 +6,7 @@ import { MovementDirection } from "@/generated/prisma/enums";
 import { getCurrentSession } from "@/infrastructure/auth/currentUser";
 import type { SessionPayload } from "@/infrastructure/auth/session";
 import { recordStockMovement } from "@/application/stock/recordStockMovement";
-import {
-  ValidationError,
-  NotFoundError,
-  InsufficientStockError,
-  ForbiddenError,
-} from "@/domain/errors";
+import { mapDomainError } from "@/lib/mapDomainError";
 
 export type MovementActionResult = { ok: true; balanceAfter: number } | { ok: false; error: string };
 
@@ -25,26 +20,6 @@ const movementInputSchema = z.object({
 });
 
 export type MovementFormInput = z.infer<typeof movementInputSchema>;
-
-/**
- * Never let a raw error (DB message, stack trace) reach the browser — map
- * every known domain error to a short user-facing message, and swallow
- * anything else behind a generic one. See PRODUCT spec §7 "Error handling".
- */
-function mapError(error: unknown): string {
-  if (
-    error instanceof ValidationError ||
-    error instanceof NotFoundError ||
-    error instanceof InsufficientStockError
-  ) {
-    return error.message;
-  }
-  if (error instanceof ForbiddenError) {
-    return "You do not have permission to perform this action.";
-  }
-  console.error("recordMovementAction failed", error);
-  return "Something went wrong recording this movement. Please try again.";
-}
 
 /**
  * The actual work, factored out from the "use server" export so it's
@@ -74,7 +49,7 @@ export async function performRecordMovement(
     });
     return { ok: true, balanceAfter: result.balanceAfter.toNumber() };
   } catch (error) {
-    return { ok: false, error: mapError(error) };
+    return { ok: false, error: mapDomainError(error) };
   }
 }
 

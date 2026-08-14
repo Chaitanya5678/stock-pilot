@@ -20,15 +20,23 @@ speculative — each line is either a reference workflow or a CLAUDE.md-mandated
 - Automated test infrastructure (Vitest, real-database integration tests).
 - Development seed data.
 
-**Application features (not yet built — next phases):**
-- Record a stock movement (UI for the transactional use case already built).
-- Browse/search/filter/sort the product catalog.
+**Application features — built:**
+- Login/logout, session-gated inventory page.
+- Record a stock movement (Stock in / Consumption / Adjustment) with role-appropriate options,
+  server-side validated, atomic, with movement/history visibility.
+- Browse/search/filter the product catalog (search, department, category, status).
 - Add/edit the product catalog (edit excludes stock — see `docs/DECISIONS.md`).
-- Maintain departments, machine models, machine units (add; department delete-if-unused).
+- Role-appropriate UI (catalog management controls hidden for roles without `catalog:manage`,
+  enforced server-side regardless of what the UI shows).
+
+**Application features — not yet built (next phases):**
+- Maintain departments, machine models, machine units (add; department delete-if-unused) — the
+  product form can *select* existing departments/machines (a read-only lookup, see
+  `docs/DECISIONS.md` "Product Catalog: read access to departments/machines"), but cannot create
+  them.
 - Shift in-charge log (record + derive "current").
-- Low-stock alerts, stock/transaction history views.
-- Role-appropriate UI (hide/disable actions the current user's role cannot perform — enforced
-  server-side regardless of what the UI shows).
+- Low-stock alerts sidebar (movement history is built; the low-stock alert panel is not).
+- Product delete/deactivate — see `docs/DECISIONS.md` "Product delete/deactivate" OPEN_QUESTION.
 
 ## 2. SHOULD HAVE
 
@@ -82,6 +90,12 @@ audit identity, and STORE_OPERATOR's adjustment permission (now firmly **no** �
 7. **Threshold validation mismatch** (`BUSINESS_RULES.md` §11) — resolved for the foundation:
    `threshold >= 0` is enforced (the reference's actually-executed JS rule), not the HTML's
    unenforced `min=1`. Revisit if the business wants a stricter floor.
+8. **Product delete/deactivate** (`docs/DECISIONS.md` "Product delete/deactivate") — not built;
+   the reference never supported it either, but production needs *some* answer eventually.
+9. **Item department vs. its linked machine's department may diverge** (`DOMAIN.md` §5) — the
+   product form auto-fills department on machine selection but still allows changing it
+   afterward, preserving the reference's exact behaviour; unresolved whether that divergence
+   should be blocked.
 
 ## 6. Explicitly NOT in MVP
 
@@ -104,10 +118,12 @@ accepted as deferred (not silently dropped); tests cover stock add/consume/adjus
 negative-stock prevention, inventory calculations, validation, and permissions;
 typecheck/lint/tests pass.
 
-## 8. Foundation status (this task)
+## 8. Foundation status
 
-Built and verified: database schema + migrations, domain layer, `recordStockMovement` and
-`createInventoryItem` use cases, auth (login/logout/me) foundation, RBAC enforcement, test suite,
-dev seed data. Not built: any UI, the remaining application-layer use cases (edit item, add
-department/machine/machine-unit, shift log), analytics. See the completion report for this task
-for full verification detail.
+Built and verified, across three completed phases (foundation → stock movement vertical slice →
+product catalog management): database schema + migrations, domain layer, `recordStockMovement`,
+`createInventoryItem`, `updateInventoryItem` use cases, auth (login/logout/me), RBAC enforcement,
+full login → inventory → movement/catalog UI, test suite (unit + integration + Playwright E2E),
+dev seed data. Not built: add department/machine/machine-unit, shift-in-charge log UI, low-stock
+alerts panel, analytics, product delete/deactivate. See each phase's completion report for full
+verification detail.

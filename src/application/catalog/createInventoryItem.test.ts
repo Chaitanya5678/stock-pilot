@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { ItemCategory, Criticality, UnitOfMeasure, Role } from "@/generated/prisma/enums";
+import { prisma } from "@/infrastructure/db/prismaClient";
 import { resetDatabase } from "@/test/resetDatabase";
 import { createTestDepartment, createTestMachine } from "@/test/fixtures";
 import { ForbiddenError, ValidationError } from "@/domain/errors";
@@ -71,5 +72,42 @@ describe("createInventoryItem", () => {
     await expect(
       createInventoryItem(baseInput(department.id, null, Role.MAINTENANCE_USER)),
     ).rejects.toThrow(ForbiddenError);
+  });
+});
+
+// SKU/barcode are server-generated, never user-supplied, so a "duplicate"
+// can't be produced through the normal create flow (verified above). These
+// tests instead confirm the database constraint itself — the true
+// authoritative backstop per docs/DECISIONS.md "Identifiers" — actually
+// rejects a duplicate, independent of the generation logic.
+describe("SKU/barcode uniqueness at the database level", () => {
+  async function rawItem(departmentId: string, overrides: { sku?: string; barcode?: string }) {
+    return prisma.inventoryItem.create({
+      data: {
+        name: "Raw Item",
+        sku: overrides.sku ?? `RAW-SKU-${Math.random()}`,
+        barcode: overrides.barcode ?? `RAWBARCODE${Math.random()}`,
+        departmentId,
+        category: ItemCategory.OPERATING_SPARES,
+        criticality: Criticality.VITAL,
+        rack: "A-1",
+        unitOfMeasure: UnitOfMeasure.EACH,
+        stock: 1,
+        threshold: 1,
+        price: 1,
+      },
+    });
+  }
+
+  it("rejects a duplicate sku", async () => {
+    const department = await createTestDepartment();
+    await rawItem(department.id, { sku: "DUPLICATE-SKU" });
+    await expect(rawItem(department.id, { sku: "DUPLICATE-SKU" })).rejects.toThrow();
+  });
+
+  it("rejects a duplicate barcode", async () => {
+    const department = await createTestDepartment();
+    await rawItem(department.id, { barcode: "DUPLICATE-BARCODE" });
+    await expect(rawItem(department.id, { barcode: "DUPLICATE-BARCODE" })).rejects.toThrow();
   });
 });

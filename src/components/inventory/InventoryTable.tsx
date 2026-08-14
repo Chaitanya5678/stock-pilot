@@ -7,9 +7,15 @@ import { CATEGORY_LABEL, CRITICALITY_LABEL, STATUS_LABEL, formatQuantity, UNIT_L
 export function InventoryTable({
   items,
   onSelect,
+  canManageCatalog,
+  onAddProduct,
+  onEditProduct,
 }: {
   items: InventoryItemView[];
   onSelect: (sku: string) => void;
+  canManageCatalog: boolean;
+  onAddProduct: () => void;
+  onEditProduct: (item: InventoryItemView) => void;
 }) {
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("all");
@@ -41,6 +47,13 @@ export function InventoryTable({
           <h2>Product inventory</h2>
           <span className="subtle">{filtered.length} of {items.length} items shown</span>
         </div>
+        {canManageCatalog ? (
+          <div className="panel-header-actions">
+            <button className="primary-btn" type="button" onClick={onAddProduct}>
+              Add product
+            </button>
+          </div>
+        ) : null}
       </div>
       <div className="filters">
         <div className="search">
@@ -117,9 +130,16 @@ export function InventoryTable({
                   <span className={`status ${item.status.toLowerCase()}`}>{STATUS_LABEL[item.status]}</span>
                 </td>
                 <td>
-                  <button className="action-btn" type="button" onClick={() => onSelect(item.sku)}>
-                    Use
-                  </button>
+                  <div className="row-actions">
+                    <button className="action-btn" type="button" onClick={() => onSelect(item.sku)}>
+                      Use
+                    </button>
+                    {canManageCatalog ? (
+                      <button className="action-btn" type="button" onClick={() => onEditProduct(item)}>
+                        Edit
+                      </button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             ))}
