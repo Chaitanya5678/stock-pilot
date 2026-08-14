@@ -18,4 +18,9 @@ describe("stockStatus", () => {
   it("accepts string/decimal-like inputs", () => {
     expect(stockStatus("0.00", "10")).toBe("OUT_OF_STOCK");
   });
+
+  it("with a zero threshold, any stock above zero is IN_STOCK (LOW_STOCK is unreachable)", () => {
+    expect(stockStatus(0, 0)).toBe("OUT_OF_STOCK");
+    expect(stockStatus(1, 0)).toBe("IN_STOCK");
+  });
 });

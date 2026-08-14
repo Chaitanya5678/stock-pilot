@@ -36,9 +36,13 @@ speculative — each line is either a reference workflow or a CLAUDE.md-mandated
   `docs/UI_REFERENCE.md` §2. Recording requires `catalog:manage`; viewing the current in-charge
   and recent history is visible to all roles. See `docs/DECISIONS.md` for the three decisions
   from this phase (no audit-actor column, reuse of `deriveInchargeAt`, permission reuse).
+- Low-stock alerts sidebar (read-only) — the third and final reference sidebar card on the
+  Inventory page, reusing the existing `stockStatus` domain rule (no second "low stock"
+  definition) and viewable by all roles (`catalog:view`). Excludes the reference's "usage rate"
+  figure, which `docs/BUSINESS_RULES.md` §10 already categorizes as an Analytics computation —
+  out of scope for a read-only alert card per this phase's explicit instruction.
 
 **Application features — not yet built (next phases):**
-- Low-stock alerts sidebar (movement history is built; the low-stock alert panel is not).
 - Product delete/deactivate — see `docs/DECISIONS.md` "Product delete/deactivate" OPEN_QUESTION.
 
 ## 2. SHOULD HAVE
@@ -129,11 +133,14 @@ typecheck/lint/tests pass.
 
 ## 8. Foundation status
 
-Built and verified, across five completed phases (foundation → stock movement vertical slice →
-product catalog management → master data management → shift in-charge log): database schema +
-migrations, domain layer, `recordStockMovement`, `createInventoryItem`/`updateInventoryItem`,
-department/machine/machine-unit create+edit(+delete for department), `recordShiftEntry`/
-`listShiftEntries`/`getCurrentShiftIncharge` use cases, auth (login/logout/me), RBAC enforcement,
-full login → inventory → movement/catalog/machines/shift UI, test suite (unit + integration +
-Playwright E2E), dev seed data. Not built: low-stock alerts panel, analytics, product
-delete/deactivate. See each phase's completion report for full verification detail.
+Built and verified, across six completed phases (foundation → stock movement vertical slice →
+product catalog management → master data management → shift in-charge log → low-stock alerts):
+database schema + migrations, domain layer, `recordStockMovement`,
+`createInventoryItem`/`updateInventoryItem`, department/machine/machine-unit create+edit(+delete
+for department), `recordShiftEntry`/`listShiftEntries`/`getCurrentShiftIncharge`,
+`listLowStockAlerts` use cases, auth (login/logout/me), RBAC enforcement, full login → inventory
+→ movement/catalog/machines/shift/alerts UI, test suite (unit + integration + Playwright E2E),
+dev seed data. The Inventory page's sidebar (per `docs/UI_REFERENCE.md` §2) is now complete: all
+three reference cards (Low stock alerts, Stock history, Shift in-charge log) are built. Not
+built: analytics, product delete/deactivate. See each phase's completion report for full
+verification detail.

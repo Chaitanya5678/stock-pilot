@@ -667,3 +667,57 @@ td:last-child {
   color: var(--dim);
   white-space: nowrap;
 }
+
+/* Low stock alerts */
+
+.count-badge {
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: rgba(255, 201, 107, 0.14);
+  color: #ffd178;
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.alert-list {
+  display: grid;
+  gap: 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.alert-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.alert-row:first-child {
+  border-top: 0;
+}
+
+.alert-info strong {
+  display: block;
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.alert-text {
+  margin: 3px 0 0;
+  color: var(--dim);
+  font-size: 0.72rem;
+}
+
+.alert-danger {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.alert-warning {
+  color: var(--warning);
+  font-weight: 700;
+}

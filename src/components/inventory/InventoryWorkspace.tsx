@@ -7,10 +7,12 @@ import type { InventoryItemView } from "@/application/inventory/listInventoryIte
 import type { MovementView } from "@/application/inventory/listRecentMovements";
 import type { DepartmentOption, MachineOption } from "@/application/catalog/listCatalogOptions";
 import type { ShiftEntryView } from "@/application/shift/listShiftEntries";
+import type { LowStockAlertView } from "@/application/inventory/listLowStockAlerts";
 import { MovementPanel } from "@/components/inventory/MovementPanel";
 import { InventoryTable } from "@/components/inventory/InventoryTable";
 import { MovementHistory } from "@/components/inventory/MovementHistory";
 import { ShiftInchargeCard } from "@/components/inventory/ShiftInchargeCard";
+import { LowStockAlerts } from "@/components/inventory/LowStockAlerts";
 import { ProductFormModal } from "@/components/catalog/ProductFormModal";
 
 export function InventoryWorkspace({
@@ -22,6 +24,7 @@ export function InventoryWorkspace({
   machines,
   currentInchargeId,
   shiftEntries,
+  lowStockAlerts,
 }: {
   items: InventoryItemView[];
   movements: MovementView[];
@@ -31,6 +34,7 @@ export function InventoryWorkspace({
   machines: MachineOption[];
   currentInchargeId: string | null;
   shiftEntries: ShiftEntryView[];
+  lowStockAlerts: LowStockAlertView[];
 }) {
   const router = useRouter();
   const [lookupValue, setLookupValue] = useState("");
@@ -56,6 +60,7 @@ export function InventoryWorkspace({
           onEditProduct={(item) => setProductModal({ mode: "edit", item })}
         />
         <aside className="sidebar">
+          <LowStockAlerts alerts={lowStockAlerts} onSelect={setLookupValue} />
           <MovementHistory movements={movements} />
           <ShiftInchargeCard
             currentInchargeId={currentInchargeId}

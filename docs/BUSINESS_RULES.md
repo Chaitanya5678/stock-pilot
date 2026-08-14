@@ -186,6 +186,12 @@ Reporting periods (`analyticsPeriod`):
   if the item has no consume records at all. Computed over **all-time** history, independent of
   the analytics period selector.
 
+  **Not implemented in the production low-stock alert card** (`src/application/inventory/listLowStockAlerts.ts`).
+  This computation is categorized here, under Analytics, precisely because it *is* an analytics
+  figure (an all-time consumption-rate derivation) — building the read-only alert card was
+  explicitly scoped to exclude analytics, so the card shows name/SKU/barcode/criticality/current
+  stock/threshold/status only, per `docs/UI_REFERENCE.md` §2 and `docs/MVP_SCOPE.md`.
+
 `OPEN_QUESTION` (asymmetry): current-stock/department breakdown ignores the period selector while
 consumption/category breakdown honors it. `ASSUMPTION`: this is intentional — current on-hand
 stock has no "as of a past date" history in the reference data model (only a live `stock` number,
