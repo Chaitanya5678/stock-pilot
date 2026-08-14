@@ -1,5 +1,4 @@
-import { config } from "dotenv";
-config({ quiet: true });
+import "./loadEnv";
 import { Role, ItemCategory, Criticality, UnitOfMeasure, MovementDirection } from "@/generated/prisma/enums";
 import { prisma } from "@/infrastructure/db/prismaClient";
 import { hashPassword } from "@/infrastructure/auth/password";
