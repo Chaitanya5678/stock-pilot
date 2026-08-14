@@ -73,6 +73,8 @@ export function MovementPanel({
         });
         setQuantity("1");
         setReason("");
+        setEmployeeLabel("");
+        onLookupChange("");
         onRecorded();
       } else {
         setMessage({ kind: "error", text: result.error });

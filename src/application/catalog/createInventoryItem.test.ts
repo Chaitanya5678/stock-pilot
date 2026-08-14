@@ -3,7 +3,7 @@ import { ItemCategory, Criticality, UnitOfMeasure, Role } from "@/generated/pris
 import { prisma } from "@/infrastructure/db/prismaClient";
 import { resetDatabase } from "@/test/resetDatabase";
 import { createTestDepartment, createTestMachine } from "@/test/fixtures";
-import { ForbiddenError, ValidationError } from "@/domain/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@/domain/errors";
 import { createInventoryItem } from "./createInventoryItem";
 
 beforeEach(async () => {
@@ -64,6 +64,14 @@ describe("createInventoryItem", () => {
     await expect(
       createInventoryItem({ ...baseInput(department.id, null), name: "" }),
     ).rejects.toThrow(ValidationError);
+  });
+
+  it("rejects a product that references a nonexistent machine", async () => {
+    const department = await createTestDepartment();
+
+    await expect(
+      createInventoryItem(baseInput(department.id, "00000000-0000-0000-0000-000000000000")),
+    ).rejects.toThrow(NotFoundError);
   });
 
   it("requires catalog:manage permission", async () => {

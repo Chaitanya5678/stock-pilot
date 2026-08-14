@@ -103,12 +103,12 @@ audit identity, and STORE_OPERATOR's adjustment permission (now firmly **no** �
 9. **Who may record a shift in-charge entry** (`docs/DECISIONS.md` "Shift in-charge recording
    reuses catalog:manage") — restricted to ADMIN/STORE_MANAGER as the minimum-safe default,
    though the reference let anyone do it. Open whether STORE_OPERATOR should also be allowed.
-8. **Product delete/deactivate** (`docs/DECISIONS.md` "Product delete/deactivate") — not built;
-   the reference never supported it either, but production needs *some* answer eventually.
-9. **Item department vs. its linked machine's department may diverge** (`DOMAIN.md` §5) — the
-   product form auto-fills department on machine selection but still allows changing it
-   afterward, preserving the reference's exact behaviour; unresolved whether that divergence
-   should be blocked.
+10. **Product delete/deactivate** (`docs/DECISIONS.md` "Product delete/deactivate") — not built;
+    the reference never supported it either, but production needs *some* answer eventually.
+11. **Item department vs. its linked machine's department may diverge** (`DOMAIN.md` §5) — the
+    product form auto-fills department on machine selection but still allows changing it
+    afterward, preserving the reference's exact behaviour; unresolved whether that divergence
+    should be blocked.
 
 ## 6. Explicitly NOT in MVP
 

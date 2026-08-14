@@ -119,6 +119,15 @@ describe("updateInventoryItem", () => {
     ).rejects.toThrow(NotFoundError);
   });
 
+  it("rejects an unknown machine id", async () => {
+    const department = await createTestDepartment();
+    const item = await createTestInventoryItem({ departmentId: department.id });
+
+    await expect(
+      updateInventoryItem(baseInput(item.id, department.id, "00000000-0000-0000-0000-000000000000")),
+    ).rejects.toThrow(NotFoundError);
+  });
+
   it("rejects invalid field values", async () => {
     const department = await createTestDepartment();
     const item = await createTestInventoryItem({ departmentId: department.id });

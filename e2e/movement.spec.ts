@@ -36,6 +36,12 @@ test("login -> inventory -> stock-in movement -> balance and history update", as
   const historyTop = page.locator(".movement-row").first();
   await expect(historyTop).toContainText(ITEM_NAME);
   await expect(historyTop).toContainText("Stock in");
+
+  // Regression: the lookup field must clear after a successful submission
+  // (docs/BUSINESS_RULES.md §2 — reference behaviour), so a scanner-driven
+  // workflow can move straight to the next product without a stale match.
+  await expect(page.locator("#productLookup")).toHaveValue("");
+  await expect(page.locator(".product-match")).toHaveText("Ready to scan or enter a product code.");
 });
 
 test("STORE_OPERATOR movement form does not offer Adjustment", async ({ page }) => {

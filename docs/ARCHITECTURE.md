@@ -1,16 +1,15 @@
-# ARCHITECTURE.md — Architecture (Foundation Implemented)
+# ARCHITECTURE.md — Architecture (MVP Implemented)
 
-Originally a proposal; the foundation described here (schema, domain layer, the
-`recordStockMovement`/`createInventoryItem` use cases, auth) is now implemented and verified.
-The UI layer and the remaining application-layer use cases (edit item, add department/machine/
-machine-unit, shift log) are not yet built — see `docs/MVP_SCOPE.md` §8 for what's done. Tags:
-`ASSUMPTION` for anything not dictated by CLAUDE.md, the reference, or `docs/DECISIONS.md`.
+Originally a proposal; the architecture described here is now implemented and verified across
+six phases (foundation, stock movement, product catalog, master data, shift in-charge, low-stock
+alerts) — see `docs/MVP_SCOPE.md` §8 for the current build status. Tags: `ASSUMPTION` for
+anything not dictated by CLAUDE.md, the reference, or `docs/DECISIONS.md`.
 
 ## 1. Layering (CLAUDE.md §4, mandatory)
 
 ```
-UI (Next.js — not yet built)
-   → Application layer   src/application/**   (use-cases: recordStockMovement, createInventoryItem, authenticate, ...)
+UI              src/app/** (pages), src/components/**   (login, inventory, machines pages + sidebar cards/modals)
+   → Application layer   src/application/**, src/app/*/actions.ts   (use-cases + the Server Actions that call them)
       → Domain layer      src/domain/**        (business rules: stock status, movement validation,
                                                   code generation, RBAC, shift-in-charge derivation)
          → Persistence     src/infrastructure/db/prismaClient.ts + Prisma (PostgreSQL)
@@ -76,9 +75,11 @@ updated ⇒ the transaction throws and rolls back before any `StockMovement` row
   "Authentication mechanism" for why this isn't NextAuth/Auth.js.
 - **Authorization**: `src/domain/rbac/permissions.ts` defines the role → permission map; every
   mutating application-layer function calls `requirePermission(role, permission)` before touching
-  the database. Enforced server-side only — there is no UI yet for a role check to be bypassed
-  through, but the pattern (check in the use-case, not the caller) is intended to hold once one
-  exists.
+  the database — checked in the use-case itself, not the caller, so it can't be bypassed by a
+  Server Action or a future API route skipping a UI-level check. The UI additionally hides
+  controls a role can't use (e.g. no "Add product" button without `catalog:manage`), but that's a
+  usability nicety, not the security boundary — every mutation is re-verified server-side
+  regardless of what the client sends.
 
 ## 5. Testing (implemented)
 
@@ -91,8 +92,11 @@ updated ⇒ the transaction throws and rolls back before any `StockMovement` row
   transaction/concurrency behaviour). `src/test/resetDatabase.ts` truncates between tests;
   `vitest.global-setup.ts` runs `prisma migrate deploy` against the test database before the
   suite starts, so it can never silently drift from `stockpilot_dev`'s schema.
-- E2E tests (Playwright) are intentionally not set up yet — there is no UI to exercise. Add once
-  the critical workflows in `docs/PRODUCT.md` §3 have screens.
+- **E2E tests** (`e2e/*.spec.ts`, Playwright, chromium only): one focused spec per phase (login →
+  movement, product catalog, master data, shift log, low-stock alerts) against the dev database's
+  seed data, plus at least one unauthorized-role check per spec. Deliberately not a large suite —
+  business-rule edge cases stay in Vitest; Playwright only proves the browser/session/Server
+  Action/database wiring actually holds together end to end.
 
 ## 6. Explicitly excluded (per user instruction and CLAUDE.md §3)
 
